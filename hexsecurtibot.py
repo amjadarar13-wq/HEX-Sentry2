@@ -3,8 +3,27 @@ from discord import app_commands
 from discord.ext import commands
 import asyncio
 import os
+from flask import Flask
+from threading import Thread
 
-# إعداد الصلاحيات (Intents)
+# ---------- 1. إنشاء سيرفر ويب مصغر للبقاء نادهاً (Keep Alive) ----------
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "HEX Security Bot is Online!"
+
+def run_web_server():
+    # تشغيل سيرفر الويب على المنفذ المناسب لـ Render
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run_web_server)
+    t.daemon = True
+    t.start()
+
+# ---------- 2. إعدادات بوت الديسكورد ----------
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
@@ -12,7 +31,6 @@ intents.moderation = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# المتغيرات العامة
 WHITELIST_ROLE_ID = None  # ID الرتبة المسموح لها بالتعديل
 LOG_CHANNEL_ID = None      # ID قناة السجلات
 
@@ -97,7 +115,7 @@ async def on_guild_role_delete(role: discord.Role):
         await check_and_punish(role.guild, entry.user, f"حذف رتبة: {role.name}")
         break
 
-# ---------- أوامر السلاش ----------
+# ---------- أوامر السلاش (Slash Commands) ----------
 
 @bot.tree.command(name="set_role", description="تحديد الرتبة المسموح لها بالتعديل فقط")
 @app_commands.checks.has_permissions(administrator=True)
@@ -135,10 +153,11 @@ async def protection_status(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-# تشغيل البوت (يقرأ التوكن تلقائياً من بيئة النظام أو يمكنك وضعه هنا مؤقتاً للتجربة)
+# ---------- 3. التشغيل النهائي ----------
+keep_alive()  # تشغيل سيرفر الويب في الخلفية
+
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
-    # إذا كنت تريد وضعه يدوياً أثناء التجربة المحلية فقط، استبدل ما بين القوسين بالتوكن:
     TOKEN = "YOUR_BOT_TOKEN_HERE"
 
 bot.run(TOKEN)
