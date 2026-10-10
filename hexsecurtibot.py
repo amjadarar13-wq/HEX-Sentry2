@@ -153,11 +153,11 @@ async def protection_status(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-# ---------- 3. التشغيل النهائي ----------
-keep_alive()  # تشغيل سيرفر الويب في الخلفية
+# ---------- التشغيل النهائي ----------
+keep_alive()  # تشغيل سيرفر الويب
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
-    TOKEN = "YOUR_BOT_TOKEN_HERE"
-
-bot.run(TOKEN)
+    print("⚠️ تحذير: لم يتم العثور على DISCORD_TOKEN، تأكد من إضافته في إعدادات Render!")
+else:
+    bot.run(TOKEN)
